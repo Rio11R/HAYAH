@@ -1,0 +1,13 @@
+$ python -B validate_hayah_data.py hayah_master_data_v0.3.json
+HAYAH DATA AUDIT
+Counts: patients=50, ambulances=3, departments=5, staff=15, equipment=5, beds=88
+Errors: 0
+Warnings/decisions: 5
+  NOTE: WARD-01: out-of-service beds included in total capacity; confirm effective-capacity rule
+  NOTE: predicted_incoming is a static snapshot; ETA changes need an approved time-window/recalculation rule
+  NOTE: department occupied may include untracked background patients: do not recompute it as count(patients) alone
+  NOTE: mixed case status values: do not normalize until DEC-06 is approved
+  NOTE: scenario engine and operational prediction formulas still require team approval (DEC-04 / DEC-06)
+PASS: structural and snapshot consistency checks
+
+Exit code: 0
