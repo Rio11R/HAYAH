@@ -1,0 +1,1309 @@
+{
+  "meta": {
+    "dataset": "HAYAH synthetic demo data",
+    "version": "0.3-draft",
+    "synthetic": true,
+    "note": "بيانات افتراضية بالكامل؛ لا علاقة لها بأي مريض أو مستشفى حقيقي.",
+    "empty_value_convention": "القيمة الفارغة تُكتب \"\" (String) في ambulance_id و next_department_id",
+    "interactive_patient_ids": [
+      "PAT-001",
+      "PAT-002",
+      "PAT-003",
+      "PAT-004",
+      "PAT-005",
+      "PAT-006",
+      "PAT-007",
+      "PAT-008"
+    ],
+    "derivation_rules": {
+      "occupied": "إجمالي المرضى في القسم لحظة اللقطة (Waiting + In_service)، ويشمل مرضى خلفية غير مدرجين في patients؛ سجلات patients هي المرضى المتتبَّعون (50) وليست كامل الإشغال",
+      "predicted_incoming": "عدد المرضى الذين next_department_id = القسم وcurrent_department مختلف عنه (يشمل مرضى الإسعاف En_route)",
+      "department_status": "(occupied + predicted_incoming) / capacity: ≥0.9 Critical، ≥0.7 Warning، غير ذلك Normal",
+      "capacity": "للأقسام ذات الأسرّة (ED-01, ICU-01, WARD-01) = عدد سجلات beds للقسم؛ للأشعة والمختبر = سعة استقبال بعدد المرضى (لا أسرّة)",
+      "queue_length": "عدد سجلات patients بحالة Waiting في القسم (من السجلات المتتبَّعة فقط)",
+      "predicted_path": "يبدأ بالقسم الحالي (أو بقسم الوصول الأول لمرضى الإسعاف) ويتطابق مع next_department_id",
+      "beds": "حالة الأسرّة متسقة مع occupied لكل قسم ذي أسرّة؛ لا أسرّة لـ RAD-CT وLAB-01"
+    },
+    "triage_basis": {
+      "PAT-001": "عودة نبض تلقائي بعد توقف القلب (ROSC) = المستوى 1",
+      "PAT-002": "ألم صدري مع مظاهر قلبية = المستوى 2",
+      "PAT-003": "أعراض جلطة دماغية، الزمن من بداية الأعراض < 4.5 ساعة = المستوى 2",
+      "PAT-004": "ضائقة تنفسية متوسطة (تشبع < 92%) = المستوى 2",
+      "PAT-005": "ألم صدري من منشأ غير قلبي، مفاجئ ومستمر = المستوى 3",
+      "PAT-006": "ضغط انقباضي 200-220 مع صداع = المستوى 3",
+      "PAT-007": "آلية إصابة مميزة (سقوط من ارتفاع > 6 أمتار) = المستوى 2",
+      "PAT-008": "قيء دموي نشط = المستوى 2",
+      "PAT-009": "ألم بطني متوسط (4-7/10) حاد",
+      "PAT-010": "التهاب مسالك بولية، عسرة تبول خفيفة",
+      "PAT-011": "كدمات وسحجات طفيفة",
+      "PAT-012": "تشوه واضح في طرف",
+      "PAT-013": "التواء كاحل",
+      "PAT-014": "تمزق يتطلب خياطة",
+      "PAT-015": "سكر دم ≥ 18 ملم/ل دون أعراض",
+      "PAT-016": "ضغط انقباضي 200-220 دون أعراض",
+      "PAT-017": "التهاب حلق دون أعراض تنفسية",
+      "PAT-018": "ضائقة تنفسية خفيفة (تشبع 93%)",
+      "PAT-019": "ضغط انقباضي ≥ 220 مع صداع = المستوى 2",
+      "PAT-020": "إمساك، ألم خفيف",
+      "PAT-021": "ألم بطني متوسط",
+      "PAT-022": "ألم مزمن متوسط مركزي",
+      "PAT-023": "سقوط من ارتفاع > 1 متر مع إصابة رأس = المستوى 2",
+      "PAT-024": "ألم صدري من منشأ غير قلبي",
+      "PAT-025": "ضغط انقباضي 200-220 مع غثيان",
+      "PAT-026": "عسرة تبول خفيفة",
+      "PAT-027": "تبديل ضماد مع علامات حيوية طبيعية",
+      "PAT-028": "قيء مدمى بكمية قليلة",
+      "PAT-029": "سكر دم < 3 ملم/ل مع ارتباك = المستوى 2",
+      "PAT-030": "ألم أذن",
+      "PAT-031": "ما بعد ROSC",
+      "PAT-032": "جلطة دماغية مستقرة",
+      "PAT-033": "صدمة إنتانية",
+      "PAT-034": "إصابة مخترقة للصدر",
+      "PAT-035": "ألم صدري قلبي",
+      "PAT-036": "حمى مع علامات عدم الراحة",
+      "PAT-037": "ألم مزمن متوسط",
+      "PAT-038": "ضائقة تنفسية خفيفة",
+      "PAT-039": "حمى مع علامات راحة",
+      "PAT-040": "حروق 5-25% من مساحة الجسم",
+      "PAT-041": "عسرة تبول خفيفة",
+      "PAT-042": "تبديل ضماد",
+      "PAT-043": "سكر دم مرتفع دون أعراض",
+      "PAT-044": "ارتفاع ضغط دون أعراض",
+      "PAT-045": "حمل ≥ 20 أسبوعا، اشتباه تسرب سائل أمنيوسي",
+      "PAT-046": "نزيف مهبلي خفيف",
+      "PAT-047": "إسهال بسيط دون تجفاف",
+      "PAT-048": "حمل ≥ 20 أسبوعا، مخاض نشط (فاصل ≥ 2 دقيقة)",
+      "PAT-049": "قلق خفيف",
+      "PAT-050": "عضة حيوان تتطلب خياطة"
+    },
+    "real_world_references": "تم بناء أوقات الاستجابة وحالات استعادة النبض (ROSC) بناءً على إحصائيات الهلال الأحمر السعودي (45.4% استجابة خلال 8 دقائق، 24% نسبة نجاح ROSC). السعة السريرية للطوارئ مستلهمة من الكتاب الإحصائي السنوي لوزارة الصحة للمستشفيات المرجعية.",
+    "schema_basis": "APPROVED_SCOPE_0.3v_MPS",
+    "hospital": {
+      "hospital_id": "HOSP-01",
+      "name": "Virtual Hospital",
+      "note": "مستشفى اصطناعي واحد (DEC-01)"
+    },
+    "known_limitations": [
+      "predicted_incoming لقطة ثابتة لا تتغير بتغيير eta_minutes؛ إعادة الحساب مسؤولية calculateOperationalPressure",
+      "occupied في ED-01 وRAD-CT أعلى من سجلات patients المتتبَّعة؛ الفرق مرضى خلفية غير مفصّلين",
+      "أعداد الطاقم (15) والأجهزة (5) رمزية ولا تعكس معدلات تشغيل فعلية",
+      "اختلاف حالة الأحرف في قيم status بين الكيانات (En_route/en_route، Available/available) كما في العقد الحالي، بانتظار DEC-06"
+    ]
+  },
+  "patients": [
+    {
+      "patient_id": "PAT-001",
+      "status": "En_route",
+      "triage_level": 1,
+      "ambulance_id": "AMB-101",
+      "current_department_id": "Ambulance",
+      "next_department_id": "ED-01",
+      "predicted_path": [
+        "ED-01",
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-002",
+      "status": "En_route",
+      "triage_level": 2,
+      "ambulance_id": "AMB-102",
+      "current_department_id": "Ambulance",
+      "next_department_id": "ED-01",
+      "predicted_path": [
+        "ED-01",
+        "LAB-01",
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-003",
+      "status": "En_route",
+      "triage_level": 2,
+      "ambulance_id": "AMB-103",
+      "current_department_id": "Ambulance",
+      "next_department_id": "RAD-CT",
+      "predicted_path": [
+        "RAD-CT",
+        "ED-01",
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-004",
+      "status": "In_service",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "LAB-01",
+      "predicted_path": [
+        "ED-01",
+        "LAB-01",
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-005",
+      "status": "Waiting",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "RAD-CT",
+      "predicted_path": [
+        "ED-01",
+        "RAD-CT",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-006",
+      "status": "Waiting",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "LAB-01",
+      "predicted_path": [
+        "ED-01",
+        "LAB-01",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-007",
+      "status": "In_service",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "RAD-CT",
+      "next_department_id": "ICU-01",
+      "predicted_path": [
+        "RAD-CT",
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-008",
+      "status": "In_service",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "LAB-01",
+      "predicted_path": [
+        "ED-01",
+        "LAB-01",
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-009",
+      "status": "Waiting",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "RAD-CT",
+      "predicted_path": [
+        "ED-01",
+        "RAD-CT"
+      ]
+    },
+    {
+      "patient_id": "PAT-010",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "LAB-01",
+      "predicted_path": [
+        "ED-01",
+        "LAB-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-011",
+      "status": "Waiting",
+      "triage_level": 5,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ED-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-012",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "RAD-CT",
+      "predicted_path": [
+        "ED-01",
+        "RAD-CT"
+      ]
+    },
+    {
+      "patient_id": "PAT-013",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ED-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-014",
+      "status": "Waiting",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ED-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-015",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "LAB-01",
+      "predicted_path": [
+        "ED-01",
+        "LAB-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-016",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ED-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-017",
+      "status": "Waiting",
+      "triage_level": 5,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ED-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-018",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "WARD-01",
+      "predicted_path": [
+        "ED-01",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-019",
+      "status": "Waiting",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "RAD-CT",
+      "predicted_path": [
+        "ED-01",
+        "RAD-CT",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-020",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "ED-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ED-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-021",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "RAD-CT",
+      "next_department_id": "WARD-01",
+      "predicted_path": [
+        "RAD-CT",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-022",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "RAD-CT",
+      "next_department_id": "",
+      "predicted_path": [
+        "RAD-CT"
+      ]
+    },
+    {
+      "patient_id": "PAT-023",
+      "status": "In_service",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "RAD-CT",
+      "next_department_id": "ED-01",
+      "predicted_path": [
+        "RAD-CT",
+        "ED-01",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-024",
+      "status": "Waiting",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "RAD-CT",
+      "next_department_id": "WARD-01",
+      "predicted_path": [
+        "RAD-CT",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-025",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "LAB-01",
+      "next_department_id": "ED-01",
+      "predicted_path": [
+        "LAB-01",
+        "ED-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-026",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "LAB-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "LAB-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-027",
+      "status": "Waiting",
+      "triage_level": 5,
+      "ambulance_id": "",
+      "current_department_id": "LAB-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "LAB-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-028",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "LAB-01",
+      "next_department_id": "WARD-01",
+      "predicted_path": [
+        "LAB-01",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-029",
+      "status": "Waiting",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "LAB-01",
+      "next_department_id": "ICU-01",
+      "predicted_path": [
+        "LAB-01",
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-030",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "LAB-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "LAB-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-031",
+      "status": "In_service",
+      "triage_level": 1,
+      "ambulance_id": "",
+      "current_department_id": "ICU-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-032",
+      "status": "In_service",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "ICU-01",
+      "next_department_id": "WARD-01",
+      "predicted_path": [
+        "ICU-01",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-033",
+      "status": "In_service",
+      "triage_level": 1,
+      "ambulance_id": "",
+      "current_department_id": "ICU-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "ICU-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-034",
+      "status": "In_service",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "ICU-01",
+      "next_department_id": "WARD-01",
+      "predicted_path": [
+        "ICU-01",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-035",
+      "status": "In_service",
+      "triage_level": 2,
+      "ambulance_id": "",
+      "current_department_id": "ICU-01",
+      "next_department_id": "WARD-01",
+      "predicted_path": [
+        "ICU-01",
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-036",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-037",
+      "status": "In_service",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-038",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-039",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-040",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-041",
+      "status": "In_service",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-042",
+      "status": "In_service",
+      "triage_level": 5,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-043",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-044",
+      "status": "Waiting",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-045",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-046",
+      "status": "In_service",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-047",
+      "status": "Waiting",
+      "triage_level": 5,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-048",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-049",
+      "status": "In_service",
+      "triage_level": 4,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    },
+    {
+      "patient_id": "PAT-050",
+      "status": "In_service",
+      "triage_level": 3,
+      "ambulance_id": "",
+      "current_department_id": "WARD-01",
+      "next_department_id": "",
+      "predicted_path": [
+        "WARD-01"
+      ]
+    }
+  ],
+  "ambulances": [
+    {
+      "ambulance_id": "AMB-101",
+      "eta_minutes": 7,
+      "status": "en_route",
+      "patient_id": "PAT-001"
+    },
+    {
+      "ambulance_id": "AMB-102",
+      "eta_minutes": 14,
+      "status": "en_route",
+      "patient_id": "PAT-002"
+    },
+    {
+      "ambulance_id": "AMB-103",
+      "eta_minutes": 22,
+      "status": "en_route",
+      "patient_id": "PAT-003"
+    }
+  ],
+  "departments": [
+    {
+      "department_id": "ED-01",
+      "type": "Emergency",
+      "capacity": 40,
+      "occupied": 32,
+      "queue_length": 11,
+      "predicted_incoming": 4,
+      "status": "Critical"
+    },
+    {
+      "department_id": "RAD-CT",
+      "type": "Radiology_CT",
+      "capacity": 15,
+      "occupied": 13,
+      "queue_length": 2,
+      "predicted_incoming": 5,
+      "status": "Critical"
+    },
+    {
+      "department_id": "LAB-01",
+      "type": "Laboratory",
+      "capacity": 20,
+      "occupied": 6,
+      "queue_length": 4,
+      "predicted_incoming": 5,
+      "status": "Normal"
+    },
+    {
+      "department_id": "ICU-01",
+      "type": "ICU",
+      "capacity": 8,
+      "occupied": 5,
+      "queue_length": 0,
+      "predicted_incoming": 2,
+      "status": "Warning"
+    },
+    {
+      "department_id": "WARD-01",
+      "type": "Ward",
+      "capacity": 40,
+      "occupied": 15,
+      "queue_length": 3,
+      "predicted_incoming": 7,
+      "status": "Normal"
+    }
+  ],
+  "staff": [
+    {
+      "staff_id": "DR-01",
+      "department_id": "ED-01",
+      "role": "Doctor",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "DR-02",
+      "department_id": "ED-01",
+      "role": "Doctor",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "NR-01",
+      "department_id": "ED-01",
+      "role": "Nurse",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "NR-02",
+      "department_id": "ED-01",
+      "role": "Nurse",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "DR-03",
+      "department_id": "RAD-CT",
+      "role": "Doctor",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "NR-03",
+      "department_id": "RAD-CT",
+      "role": "Nurse",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "TECH-01",
+      "department_id": "RAD-CT",
+      "role": "Technician",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "TECH-02",
+      "department_id": "RAD-CT",
+      "role": "Technician",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "TECH-03",
+      "department_id": "LAB-01",
+      "role": "Technician",
+      "status": "Available"
+    },
+    {
+      "staff_id": "TECH-04",
+      "department_id": "LAB-01",
+      "role": "Technician",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "DR-04",
+      "department_id": "ICU-01",
+      "role": "Doctor",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "NR-04",
+      "department_id": "ICU-01",
+      "role": "Nurse",
+      "status": "Busy"
+    },
+    {
+      "staff_id": "DR-05",
+      "department_id": "WARD-01",
+      "role": "Doctor",
+      "status": "Available"
+    },
+    {
+      "staff_id": "NR-05",
+      "department_id": "WARD-01",
+      "role": "Nurse",
+      "status": "Available"
+    },
+    {
+      "staff_id": "NR-06",
+      "department_id": "WARD-01",
+      "role": "Nurse",
+      "status": "Available"
+    }
+  ],
+  "equipment": [
+    {
+      "equipment_id": "EQ-CT-01",
+      "department_id": "RAD-CT",
+      "status": "in_use",
+      "last_update": "2026-11-05T08:00:00Z"
+    },
+    {
+      "equipment_id": "EQ-DEF-01",
+      "department_id": "ED-01",
+      "status": "available",
+      "last_update": "2026-11-05T08:00:00Z"
+    },
+    {
+      "equipment_id": "EQ-VENT-01",
+      "department_id": "ED-01",
+      "status": "in_use",
+      "last_update": "2026-11-05T08:00:00Z"
+    },
+    {
+      "equipment_id": "EQ-ANLZ-01",
+      "department_id": "LAB-01",
+      "status": "available",
+      "last_update": "2026-11-05T08:00:00Z"
+    },
+    {
+      "equipment_id": "EQ-VENT-02",
+      "department_id": "ICU-01",
+      "status": "in_use",
+      "last_update": "2026-11-05T08:00:00Z"
+    }
+  ],
+  "beds": [
+    {
+      "bed_id": "BED-ED-01",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-02",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-03",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-04",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-05",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-06",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-07",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-08",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-09",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-10",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-11",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-12",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-13",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-14",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-15",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-16",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-17",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-18",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-19",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-20",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-21",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-22",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-23",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-24",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-25",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-26",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-27",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-28",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-29",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-30",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-31",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-32",
+      "department_id": "ED-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ED-33",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ED-34",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ED-35",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ED-36",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ED-37",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ED-38",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ED-39",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ED-40",
+      "department_id": "ED-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ICU-01",
+      "department_id": "ICU-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ICU-02",
+      "department_id": "ICU-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ICU-03",
+      "department_id": "ICU-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ICU-04",
+      "department_id": "ICU-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ICU-05",
+      "department_id": "ICU-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-ICU-06",
+      "department_id": "ICU-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ICU-07",
+      "department_id": "ICU-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-ICU-08",
+      "department_id": "ICU-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-01",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-02",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-03",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-04",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-05",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-06",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-07",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-08",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-09",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-10",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-11",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-12",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-13",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-14",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-15",
+      "department_id": "WARD-01",
+      "status": "occupied"
+    },
+    {
+      "bed_id": "BED-WARD-16",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-17",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-18",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-19",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-20",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-21",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-22",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-23",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-24",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-25",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-26",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-27",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-28",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-29",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-30",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-31",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-32",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-33",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-34",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-35",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-36",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-37",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-38",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-39",
+      "department_id": "WARD-01",
+      "status": "available"
+    },
+    {
+      "bed_id": "BED-WARD-40",
+      "department_id": "WARD-01",
+      "status": "out_of_service"
+    }
+  ]
+}
