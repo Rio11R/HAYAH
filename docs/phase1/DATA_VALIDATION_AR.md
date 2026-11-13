@@ -1,5 +1,7 @@
 # نتائج فحص البيانات — Phase 1
 
+This document preserves the original Phase 1 observational report. Active reproduction examples now use the canonical dataset path; they do not make the historical results a fresh validation of the reconciled workspace. See `README_AR.md` for reconciliation provenance and current validation results.
+
 المرجع المحلي: `87ee702750e24e4ecebb241d1fd1f3a0220ce467`، والملف المفحوص هو JSON الأصلي دون تعديل. نُفّذ الفحص على هذه النسخة؛ تعذرت مزامنة Git عبر الـProxy سابقًا، وأذن الريان بالمتابعة محليًا. هذا تحقق من لقطة اصطناعية، وليس اعتمادًا سريريًا أو اعتمادًا نهائيًا لـDEC-06.
 
 ## المدقق الأصلي
@@ -7,7 +9,7 @@
 من جذر المستودع:
 
 ```bash
-python validate_hayah_data.py hayah_master_data_v0.3.json
+python validate_hayah_data.py data/hayah_master_data_v0_3.json
 ```
 
 النتيجة الفعلية: رمز خروج **0**، **0 أخطاء**، **5 تحذيرات/قرارات**، و`PASS: structural and snapshot consistency checks`.
@@ -61,7 +63,7 @@ import json, math
 from datetime import datetime
 from pathlib import Path
 
-d = json.loads(Path('hayah_master_data_v0.3.json').read_text(encoding='utf-8-sig'))
+d = json.loads(Path('data/hayah_master_data_v0_3.json').read_text(encoding='utf-8-sig'))
 fields = {
     'patients': 'patient_id status triage_level ambulance_id current_department_id next_department_id predicted_path',
     'ambulances': 'ambulance_id eta_minutes status patient_id',

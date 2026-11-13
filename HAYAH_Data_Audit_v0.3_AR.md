@@ -1,6 +1,6 @@
 # HAYAH — تقرير فحص بيانات v0.3
 
-**الملف المدقق:** `hayah_master_data_v0.3.json`  
+**الملف المدقق:** `data/hayah_master_data_v0_3.json`\
 **نطاق الفحص:** سلامة البنية والعلاقات والاتساق الحسابي للقطة البيانات، وليس التحقق السريري أو صلاحية نموذج تنبؤ.
 
 ## الملخص
@@ -36,5 +36,5 @@
 
 ## تشغيل فاحص البيانات
 ```bash
-python validate_hayah_data.py hayah_master_data_v0.3.json
+python validate_hayah_data.py data/hayah_master_data_v0_3.json
 ```

@@ -6,7 +6,7 @@
 
 ## قواعد مشتركة مقترحة
 
-- المصدر هو `hayah_master_data_v0.3.json` كما هو؛ لا تطبيع لقيم `status` أو تحويل للقيم الفارغة. البيانات اصطناعية بالكامل.
+- المصدر هو `data/hayah_master_data_v0_3.json` كما هو؛ لا تطبيع لقيم `status` أو تحويل للقيم الفارغة. البيانات اصطناعية بالكامل.
 - المجموعات الحالية: `patients`, `ambulances`, `departments`, `staff`, `equipment`, `beds`؛ مفاتيحها على الترتيب `patient_id`, `ambulance_id`, `department_id`, `staff_id`, `equipment_id`, `bed_id`.
 - المستشفى موجود تحت `meta.hospital` بمعرف `HOSP-01`، وليس مجموعة مستقلة أو توأمًا مجمعًا محسوبًا.
 - القيم `""` في `ambulance_id` و`next_department_id` تعني عدم وجود ارتباط؛ لا تُستبدل بـ `null`. القيمة `Ambulance` في `current_department_id` علامة موقع، وليست معرف قسم مفقودًا. `predicted_path` يحتوي معرفات أقسام.

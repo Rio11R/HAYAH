@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Read-only validator for HAYAH synthetic demo data v0.3.
-Usage: python validate_hayah_data.py hayah_master_data_v0.3.json
+Usage: python validate_hayah_data.py data/hayah_master_data_v0_3.json
 Requires: Python 3.9+ standard library only.
 """
 import collections
@@ -120,7 +120,8 @@ def validate(path):
 
 
 if __name__ == '__main__':
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path('hayah_master_data_v0.3.json')
+    default_data = Path(__file__).resolve().parent / 'data' / 'hayah_master_data_v0_3.json'
+    path = Path(sys.argv[1]) if len(sys.argv) > 1 else default_data
     errors, warnings, counts = validate(path)
     print('HAYAH DATA AUDIT')
     print('Counts:', ', '.join(f'{k}={v}' for k, v in counts.items()))

@@ -156,8 +156,8 @@ class DatasetInspector:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--data', type=Path, default=Path(__file__).with_name(
-        'hayah_master_data_v0.3.json'))
+    default_data = Path(__file__).resolve().parent / 'data' / 'hayah_master_data_v0_3.json'
+    parser.add_argument('--data', type=Path, default=default_data)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('snapshot')
     listing = commands.add_parser('list')

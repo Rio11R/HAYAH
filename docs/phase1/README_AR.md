@@ -2,6 +2,12 @@
 
 هذه المرحلة أدوات فحص بيانات محلية للقراءة فقط، باستخدام Python 3.9+ والمكتبة القياسية دون تثبيت حزم. ليست اختيارًا لتقنية التطبيق النهائية ولا تنفيذًا للتوائم المتغيرة أو التنبؤ أو المحاكاة. لم تُبنَ واجهة ولم يبدأ Phase 2.
 
+## Reconciliation provenance
+
+The existing Phase 1 additions were restored from pinned commit `b049027cb7916c78b6773c9c36293e3e2e1d0fa0` into the main-based integration workspace at `779a895202edb37acfd0ba03324b1bda62ea0aef`. Compatibility changes use `data/hayah_master_data_v0_3.json`; the original root-level dataset is not recreated. No Phase 2 functionality is included, and no commit, push, or PR update is part of this reconciliation.
+
+The original reference and results below describe the historical Phase 1 delivery. Current commands use the canonical dataset path; fresh reconciliation results are reported separately.
+
 ## المرجع ونطاق العمل
 
 - قاعدة الفرع: `87ee702750e24e4ecebb241d1fd1f3a0220ce467`، وهي مراجعة النسخة المحلية المطابقة لـ main عند التحقق الأول عبر موصل GitHub.
@@ -29,9 +35,11 @@
 من جذر المستودع:
 
 ```bash
-python -B validate_hayah_data.py hayah_master_data_v0.3.json
+python -B validate_hayah_data.py data/hayah_master_data_v0_3.json
+python -B validate_hayah_data.py
 python -B -m unittest discover -s tests -v
 python -B hayah_inspect.py relationships
+python -B hayah_inspect.py --data data/hayah_master_data_v0_3.json relationships
 python -B hayah_inspect.py get patients PAT-001
 python -B hayah_inspect.py get ambulances AMB-101
 python -B hayah_inspect.py list departments
@@ -40,12 +48,12 @@ python -B hayah_inspect.py cases
 python -B hayah_inspect.py indicators RAD-CT
 ```
 
-`snapshot` يعرض كامل البيانات وmetadata؛ ويمكن تمرير `--data PATH` قبل اسم الأمر لفحص نسخة أخرى. المسار الافتراضي للـJSON بجوار الأداة، ولا يتوقف على مجلد تشغيلها.
+`snapshot` يعرض كامل البيانات وmetadata؛ ويمكن تمرير `--data PATH` قبل اسم الأمر لفحص نسخة أخرى. The default dataset is `data/hayah_master_data_v0_3.json`, resolved relative to the tool rather than the working directory.
 
 ```python
 from hayah_inspect import DatasetInspector
 
-demo = DatasetInspector.load('hayah_master_data_v0.3.json')
+demo = DatasetInspector.load('data/hayah_master_data_v0_3.json')
 patient = demo.get('patients', 'PAT-001')
 ambulance = demo.get('ambulances', 'AMB-101')
 cases = demo.interactive_patients()
@@ -58,22 +66,46 @@ errors = demo.relationship_errors()        # [] للنسخة الأصلية
 
 المحمل يتحقق من بنية المجموعات والسجلات والمعرفات وقائمة الاختيار اللازمة للقراءة الآمنة، ويثير `DataInspectionError` عند فسادها. أخطاء قراءة الملف وفك JSON تحتفظ بأنواع Python الأصلية. نجاح التحميل ليس بديلًا لتشغيل المدقق؛ لا يفرض المحمل مخططًا نهائيًا لكل الحقول أو اعتمادًا سريريًا. نتيجة `relationship_errors` تفحص المراجع في الاتجاهين وجميع عناصر المسارات والموارد وmetadata. كود خروج CLI هو 0 للنجاح، 1 لأخطاء العلاقات المكتشفة، و2 لخطأ مدخل/قراءة/معرف؛ هذا سلوك أداة فحص فقط وليس عقد التطبيق المقترح.
 
-للتحقق من بقاء المصادر الأربعة دون تعديل:
+The manifest records the four original Phase 1 source digests. Only its master-dataset path key was relocated; all digests are preserved. The audit document and validator now contain approved compatibility edits, so their historical digests are not assertions about current files. Verify the unchanged dataset and specification PDF from the repository root:
 
 ```bash
 python -B - <<'PY'
 import hashlib, json
 from pathlib import Path
 expected = json.loads(Path('docs/phase1/source-sha256.json').read_text())
-for name, digest in expected.items():
-    assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == digest, name
-print('Source hashes unchanged: 4/4')
+for name in ('data/hayah_master_data_v0_3.json', 'HAYAH_Master_Project_Specification_v0.3_AR.pdf'):
+    assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected[name], name
+print('Dataset and specification hashes unchanged: 2/2')
 PY
 ```
+
+## Archived original Phase 1 results
+
+`test-output.txt` and `validation-output.txt` retain their original bytes from the pinned Phase 1 source commit. Their 27-test result and old root-level command describe that historical snapshot, not a fresh run of the reconciled workspace.
 
 ## نتائج الاختبارات الفعلية
 
 نجح المدقق الأصلي برمز خروج 0: لا أخطاء و5 تحذيرات/قرارات موثقة. نُفّذت 27 حالة اختبار آلي ونجحت جميعها، بما فيها الاختبارات السلبية للمراجع المكسورة والمعرفات/البنية غير الصالحة، واختبارات CLI والنسخ العميقة وثبات بايتات المصدر. السجل الفعلي في `test-output.txt`، وتفاصيل التدقيق وحدوده في `DATA_VALIDATION_AR.md`. ليست هذه اختبارات للمحاكاة أو للتنبؤ أو لتكامل واجهة لم يُنفّذ بعد.
+
+## Reconciliation validation — 2026-11-13
+
+The following commands were executed against the reconciled workspace; all exited with code 0:
+
+| Working directory | Command | Observed result |
+|---|---|---|
+| Repository root | `python -B validate_hayah_data.py data/hayah_master_data_v0_3.json` | 0 errors; 5 warnings/decisions; PASS |
+| Repository root | `python -B validate_hayah_data.py` | Same counts, 0 errors, and 5 warnings/decisions; PASS |
+| Repository root | `python -B -m unittest discover -s tests -v` | 31 tests in 1.183s; OK (27 original tests + 4 path regressions) |
+| Repository root | `python -B hayah_inspect.py relationships` | `[]` |
+| Repository root | `python -B hayah_inspect.py --data data/hayah_master_data_v0_3.json relationships` | `[]` |
+| `/tmp` | `python -B /workspace/HAYAH/hayah_inspect.py relationships` | `[]`; default path resolves outside the repository |
+
+Both validator runs reported 50 patients, 3 ambulances, 5 departments, 15 staff, 5 equipment records, and 88 beds. The five existing operational warnings remain visible; no operational rules were changed. The regression tests cover canonical default paths, external working directories, and explicit validator paths. These are inspection and compatibility checks, not frontend or simulation validation.
+
+<details>
+<summary>Archived original handoff instructions</summary>
+
+These original export/apply instructions describe the historical branch only. They are not the integration procedure for current main; do not run them to reconcile this workspace. Committing, pushing, or updating PR #1 requires separate user approval.
 
 ## الحفظ والمراجعة
 
@@ -97,6 +129,8 @@ python -B -m unittest discover -s tests -v
 ```
 
 إذا لم تتوفر المراجعة الأساسية محليًا، اجلبها أولًا بالطريقة المعتمدة على جهازك. لا تطبق patch فوق عمل زملاء غير محفوظ. للمراجعة من الحزمة دون اتصال: `git clone hayah-phase1.bundle HAYAH-phase1-review` ثم شغّل أوامر الاختبار داخل المجلد الجديد. لا يلزم الدمج أو النشر لتشغيل الأدوات.
+
+</details>
 
 ## ما يحتاج اعتمادًا وخطة Phase 2 المقترحة
 

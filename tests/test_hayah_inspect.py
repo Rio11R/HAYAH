@@ -15,8 +15,9 @@ from hayah_inspect import DataInspectionError, DatasetInspector
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-DATA_PATH = REPOSITORY_ROOT / 'hayah_master_data_v0.3.json'
+DATA_PATH = REPOSITORY_ROOT / 'data' / 'hayah_master_data_v0_3.json'
 CLI_PATH = REPOSITORY_ROOT / 'hayah_inspect.py'
+VALIDATOR_PATH = REPOSITORY_ROOT / 'validate_hayah_data.py'
 ENTITY_KEYS = {
     'patients': 'patient_id',
     'ambulances': 'ambulance_id',
@@ -283,6 +284,15 @@ class DatasetInspectorTests(unittest.TestCase):
                 with self.assertRaises(DataInspectionError):
                     self.load_fixture(data)
 
+    def test_cli_default_data_path_works_from_repository_root(self):
+        result = subprocess.run(
+            [sys.executable, '-B', str(CLI_PATH), 'relationships'],
+            cwd=REPOSITORY_ROOT, capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), [])
+        self.assertEqual(result.stderr, '')
+
     def test_cli_default_data_path_works_outside_repository(self):
         commands = [
             (['get', 'ambulances', 'AMB-101'], self.original['ambulances'][0]),
@@ -298,6 +308,72 @@ class DatasetInspectorTests(unittest.TestCase):
                     )
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(json.loads(result.stdout), expected)
+                    self.assertEqual(result.stderr, '')
+
+    def test_cli_explicit_data_paths_use_the_requested_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            data = copy.deepcopy(self.original)
+            data['ambulances'][0]['eta_minutes'] = 9
+            custom_path = Path(directory) / 'custom-demo.json'
+            custom_path.write_text(json.dumps(data), encoding='utf-8')
+            cases = [
+                (DATA_PATH.relative_to(REPOSITORY_ROOT), REPOSITORY_ROOT,
+                 self.original['ambulances'][0]),
+                (Path(custom_path.name), directory, data['ambulances'][0]),
+                (custom_path, directory, data['ambulances'][0]),
+            ]
+            for path, working_directory, expected in cases:
+                with self.subTest(path=path):
+                    result = subprocess.run(
+                        [sys.executable, '-B', str(CLI_PATH), '--data', str(path),
+                         'get', 'ambulances', 'AMB-101'],
+                        cwd=working_directory, capture_output=True, text=True,
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(json.loads(result.stdout), expected)
+                    self.assertEqual(result.stderr, '')
+
+    def test_validator_default_data_path_works_from_root_and_outside(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for working_directory in (REPOSITORY_ROOT, directory):
+                with self.subTest(cwd=working_directory):
+                    result = subprocess.run(
+                        [sys.executable, '-B', str(VALIDATOR_PATH)],
+                        cwd=working_directory, capture_output=True, text=True,
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn('Errors: 0', result.stdout)
+                    self.assertIn('Warnings/decisions: 5', result.stdout)
+                    self.assertIn('PASS: structural and snapshot consistency checks',
+                                  result.stdout)
+                    self.assertEqual(result.stderr, '')
+
+    def test_validator_explicit_data_paths_use_the_requested_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            data = copy.deepcopy(self.original)
+            data['patients'].pop()
+            custom_path = Path(directory) / 'custom-demo.json'
+            custom_path.write_text(json.dumps(data), encoding='utf-8')
+            cases = [
+                (DATA_PATH.relative_to(REPOSITORY_ROOT), REPOSITORY_ROOT, 0),
+                (Path(custom_path.name), directory, 1),
+                (custom_path, directory, 1),
+            ]
+            for path, working_directory, expected_exit in cases:
+                with self.subTest(path=path):
+                    result = subprocess.run(
+                        [sys.executable, '-B', str(VALIDATOR_PATH), str(path)],
+                        cwd=working_directory, capture_output=True, text=True,
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, expected_exit,
+                                     result.stdout + result.stderr)
+                    if expected_exit:
+                        self.assertIn('Expected 50 patients; found 49', result.stdout)
+                    else:
+                        self.assertIn('Errors: 0', result.stdout)
                     self.assertEqual(result.stderr, '')
 
     def test_cli_nonexistent_id_returns_nonzero_without_traceback(self):
