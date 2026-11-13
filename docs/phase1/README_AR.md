@@ -4,7 +4,9 @@
 
 ## Reconciliation provenance
 
-The existing Phase 1 additions were restored from pinned commit `b049027cb7916c78b6773c9c36293e3e2e1d0fa0` into the main-based integration workspace at `779a895202edb37acfd0ba03324b1bda62ea0aef`. Compatibility changes use `data/hayah_master_data_v0_3.json`; the original root-level dataset is not recreated. No Phase 2 functionality is included, and no commit, push, or PR update is part of this reconciliation.
+The existing Phase 1 additions originated at pinned commit `b049027cb7916c78b6773c9c36293e3e2e1d0fa0` and were first reconciled against main at `779a895202edb37acfd0ba03324b1bda62ea0aef`. The local review worktree now also integrates upstream main at `14d8abc483b2846831c197a4ee0a41e6503204a8`.
+
+The canonical dataset remains `data/hayah_master_data_v0_3.json`. The validator, audit document, and both PDF references now live under `info/`; the three SVG logos remain under `assests/logo/`. No root-level dataset or duplicate root-level validator is created. Compatibility work does not implement Phase 2 or publish changes to GitHub.
 
 The original reference and results below describe the historical Phase 1 delivery. Current commands use the canonical dataset path; fresh reconciliation results are reported separately.
 
@@ -35,8 +37,8 @@ The original reference and results below describe the historical Phase 1 deliver
 من جذر المستودع:
 
 ```bash
-python -B validate_hayah_data.py data/hayah_master_data_v0_3.json
-python -B validate_hayah_data.py
+python -B info/validate_hayah_data.py data/hayah_master_data_v0_3.json
+python -B info/validate_hayah_data.py
 python -B -m unittest discover -s tests -v
 python -B hayah_inspect.py relationships
 python -B hayah_inspect.py --data data/hayah_master_data_v0_3.json relationships
@@ -66,14 +68,14 @@ errors = demo.relationship_errors()        # [] للنسخة الأصلية
 
 المحمل يتحقق من بنية المجموعات والسجلات والمعرفات وقائمة الاختيار اللازمة للقراءة الآمنة، ويثير `DataInspectionError` عند فسادها. أخطاء قراءة الملف وفك JSON تحتفظ بأنواع Python الأصلية. نجاح التحميل ليس بديلًا لتشغيل المدقق؛ لا يفرض المحمل مخططًا نهائيًا لكل الحقول أو اعتمادًا سريريًا. نتيجة `relationship_errors` تفحص المراجع في الاتجاهين وجميع عناصر المسارات والموارد وmetadata. كود خروج CLI هو 0 للنجاح، 1 لأخطاء العلاقات المكتشفة، و2 لخطأ مدخل/قراءة/معرف؛ هذا سلوك أداة فحص فقط وليس عقد التطبيق المقترح.
 
-The manifest records the four original Phase 1 source digests. Only its master-dataset path key was relocated; all digests are preserved. The audit document and validator now contain approved compatibility edits, so their historical digests are not assertions about current files. Verify the unchanged dataset and specification PDF from the repository root:
+The manifest records the four original Phase 1 source digests. Its path keys reflect the dataset under `data/` and the specification, audit document, and validator under `info/`; all digests are preserved. The audit document and validator now contain approved compatibility edits, so their historical digests are not assertions about current files. Verify the unchanged dataset and specification PDF from the repository root:
 
 ```bash
 python -B - <<'PY'
 import hashlib, json
 from pathlib import Path
 expected = json.loads(Path('docs/phase1/source-sha256.json').read_text())
-for name in ('data/hayah_master_data_v0_3.json', 'HAYAH_Master_Project_Specification_v0.3_AR.pdf'):
+for name in ('data/hayah_master_data_v0_3.json', 'info/HAYAH_Master_Project_Specification_v0.3_AR.pdf'):
     assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected[name], name
 print('Dataset and specification hashes unchanged: 2/2')
 PY
@@ -89,18 +91,19 @@ PY
 
 ## Reconciliation validation — 2026-11-13
 
-The following commands were executed against the reconciled workspace; all exited with code 0:
+The following commands were executed against the local integration worktree after incorporating upstream main `14d8abc483b2846831c197a4ee0a41e6503204a8`; all exited with code 0. “Repository root” below means `/workspace/work/hayah-phase1-local-integration/worktree`:
 
 | Working directory | Command | Observed result |
 |---|---|---|
-| Repository root | `python -B validate_hayah_data.py data/hayah_master_data_v0_3.json` | 0 errors; 5 warnings/decisions; PASS |
-| Repository root | `python -B validate_hayah_data.py` | Same counts, 0 errors, and 5 warnings/decisions; PASS |
-| Repository root | `python -B -m unittest discover -s tests -v` | 31 tests in 1.183s; OK (27 original tests + 4 path regressions) |
+| Repository root | `python -B info/validate_hayah_data.py data/hayah_master_data_v0_3.json` | 0 errors; 5 warnings/decisions; PASS |
+| Repository root | `python -B info/validate_hayah_data.py` | Same counts, 0 errors, and 5 warnings/decisions; PASS |
+| Repository root | `python -B -m unittest discover -s tests -v` | 31 tests in 0.920s; OK (27 original tests + 4 path regressions) |
 | Repository root | `python -B hayah_inspect.py relationships` | `[]` |
 | Repository root | `python -B hayah_inspect.py --data data/hayah_master_data_v0_3.json relationships` | `[]` |
-| `/tmp` | `python -B /workspace/HAYAH/hayah_inspect.py relationships` | `[]`; default path resolves outside the repository |
+| `/tmp` | `python -B /workspace/work/hayah-phase1-local-integration/worktree/hayah_inspect.py relationships` | `[]`; default path resolves outside the repository |
+| `/tmp` | `python -B /workspace/work/hayah-phase1-local-integration/worktree/info/validate_hayah_data.py` | 0 errors; 5 warnings/decisions; PASS |
 
-Both validator runs reported 50 patients, 3 ambulances, 5 departments, 15 staff, 5 equipment records, and 88 beds. The five existing operational warnings remain visible; no operational rules were changed. The regression tests cover canonical default paths, external working directories, and explicit validator paths. These are inspection and compatibility checks, not frontend or simulation validation.
+All validator runs reported 50 patients, 3 ambulances, 5 departments, 15 staff, 5 equipment records, and 88 beds. The five existing operational warnings remain visible; no operational rules were changed. The regression tests cover canonical default paths, external working directories, and explicit validator paths. These are inspection and compatibility checks, not frontend or simulation validation.
 
 <details>
 <summary>Archived original handoff instructions</summary>

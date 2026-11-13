@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from validate_hayah_data import KEYS
+from info.validate_hayah_data import KEYS
 
 
 class DataInspectionError(ValueError):

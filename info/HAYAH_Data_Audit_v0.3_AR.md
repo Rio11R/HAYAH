@@ -36,5 +36,5 @@
 
 ## تشغيل فاحص البيانات
 ```bash
-python validate_hayah_data.py data/hayah_master_data_v0_3.json
+python info/validate_hayah_data.py data/hayah_master_data_v0_3.json
 ```

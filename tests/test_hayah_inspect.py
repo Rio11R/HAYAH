@@ -17,7 +17,7 @@ from hayah_inspect import DataInspectionError, DatasetInspector
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = REPOSITORY_ROOT / 'data' / 'hayah_master_data_v0_3.json'
 CLI_PATH = REPOSITORY_ROOT / 'hayah_inspect.py'
-VALIDATOR_PATH = REPOSITORY_ROOT / 'validate_hayah_data.py'
+VALIDATOR_PATH = REPOSITORY_ROOT / 'info' / 'validate_hayah_data.py'
 ENTITY_KEYS = {
     'patients': 'patient_id',
     'ambulances': 'ambulance_id',

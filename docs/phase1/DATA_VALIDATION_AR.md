@@ -9,7 +9,7 @@ This document preserves the original Phase 1 observational report. Active reprod
 من جذر المستودع:
 
 ```bash
-python validate_hayah_data.py data/hayah_master_data_v0_3.json
+python info/validate_hayah_data.py data/hayah_master_data_v0_3.json
 ```
 
 النتيجة الفعلية: رمز خروج **0**، **0 أخطاء**، **5 تحذيرات/قرارات**، و`PASS: structural and snapshot consistency checks`.

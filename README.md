@@ -17,11 +17,13 @@ The core goal is to confirm that the dataset follows the expected schema and tha
 
 - `data/hayah_master_data_v0_3.json` — the synthetic hospital dataset used by the project
 - `data/hayah_equipment_beds_sensors_v0_1.json` — draft resource availability and virtual-sensor reference data
-- `validate_hayah_data.py` — Python script that validates schema, counts, IDs, and operational relationships
+- `info/validate_hayah_data.py` — Python script that validates schema, counts, IDs, and operational relationships
 - `hayah_inspect.py` — local read-only inspection utility
 - `tests/test_hayah_inspect.py` — inspection and dataset-path regression tests
 - `docs/phase1/README_AR.md` — Phase 1 usage, provenance, and validation notes
-- `HAYAH_Data_Audit_v0.3_AR.md` — Arabic audit summary of the dataset and its assumptions
+- `info/HAYAH_Data_Audit_v0.3_AR.md` — Arabic audit summary of the dataset and its assumptions
+- `info/HAYAH_Master_Project_Specification_v0.3_AR.pdf` and `info/علاقات التوائم الرقمية HAYAH.pdf` — project and digital-twin relationship references
+- `assests/logo/` — Noor's three SVG logo assets, with existing paths and filenames preserved
 - `README.md` — project overview and usage guidance
 
 ## What the dataset contains
@@ -57,8 +59,8 @@ The validator also produces warnings for areas that are intentionally draft or u
 Run the validator from the project folder:
 
 ```bash
-python -B validate_hayah_data.py data/hayah_master_data_v0_3.json
-python -B validate_hayah_data.py
+python -B info/validate_hayah_data.py data/hayah_master_data_v0_3.json
+python -B info/validate_hayah_data.py
 ```
 
 This checks the dataset and prints a summary of counts, validation errors, warnings, and final pass/fail status.
