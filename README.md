@@ -4,6 +4,8 @@ HAYAH is a prototype for exploring hospital operations and patient flow with syn
 
 > **Live demo:** [hayah-9exm.vercel.app](https://hayah-9exm.vercel.app/)
 
+![HAYAH live demo screenshot](assets/hayah-live-demo.png)
+
 ## What you can explore
 
 - A hospital network view, available as a 3D scene or a map
