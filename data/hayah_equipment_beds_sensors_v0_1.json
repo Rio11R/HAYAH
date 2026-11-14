@@ -1,0 +1,1351 @@
+{
+  "meta": {
+    "dataset": "HAYAH availability, states and virtual sensors",
+    "version": "0.1-draft",
+    "synthetic": true,
+    "note": "Entirely synthetic data; unrelated to any real patient or hospital & this file made to cover taj and ammar work as the plane",
+    "schema_basis": "APPROVED_SCOPE_0.3v_MPS",
+    "compatible_with": {
+      "file": "hayah_master_data_v0_3.json",
+      "version": "0.3-draft",
+      "shared_keys": [
+        "department_id",
+        "equipment_id",
+        "bed_id",
+        "staff_id",
+        "ambulance_id",
+        "patient_id"
+      ]
+    },
+    "owners": {
+      "availability_states_transitions": "Taj - Electrical Engineering",
+      "virtual_sensors": "Omar - Electrical Engineering"
+    },
+    "snapshot_timestamp": "2026-11-05T08:00:00Z",
+    "naming_convention": "Keys are snake_case in English and department identifiers match the master file; status values follow the letter casing used in the master file for each entity (beds/equipment lowercase, staff capitalized) pending DEC-06",
+    "assumptions": [
+      "All durations, thresholds and update frequencies are design assumptions, not real measurements",
+      "States flagged in_master_v0_3 = false are proposals; they need approval and must be added to the master file"
+    ]
+  },
+  "availability": {
+    "state_models": {
+      "bed": {
+        "master_collection": "beds",
+        "id_field": "bed_id",
+        "status_field": "status",
+        "states": [
+          {
+            "value": "available",
+            "in_master_v0_3": true,
+            "counts_toward_effective_capacity": true,
+            "description": "Bed ready to receive a patient"
+          },
+          {
+            "value": "occupied",
+            "in_master_v0_3": true,
+            "counts_toward_effective_capacity": true,
+            "description": "Bed occupied by a patient"
+          },
+          {
+            "value": "cleaning",
+            "in_master_v0_3": false,
+            "counts_toward_effective_capacity": true,
+            "description": "[proposed] Bed turnover after patient leaves; temporary, returns to available"
+          },
+          {
+            "value": "out_of_service",
+            "in_master_v0_3": true,
+            "counts_toward_effective_capacity": false,
+            "description": "Bed out of service (fault or long maintenance)"
+          }
+        ]
+      },
+      "equipment": {
+        "master_collection": "equipment",
+        "id_field": "equipment_id",
+        "status_field": "status",
+        "states": [
+          {
+            "value": "available",
+            "in_master_v0_3": true,
+            "operational": true,
+            "description": "Device working and not in use"
+          },
+          {
+            "value": "in_use",
+            "in_master_v0_3": true,
+            "operational": true,
+            "description": "Device working and currently in use"
+          },
+          {
+            "value": "maintenance",
+            "in_master_v0_3": false,
+            "operational": false,
+            "description": "[proposed] Scheduled maintenance; temporary"
+          },
+          {
+            "value": "out_of_service",
+            "in_master_v0_3": false,
+            "operational": false,
+            "description": "[proposed] Fault; device unavailable until repaired"
+          }
+        ]
+      },
+      "staff": {
+        "master_collection": "staff",
+        "id_field": "staff_id",
+        "status_field": "status",
+        "states": [
+          {
+            "value": "Available",
+            "in_master_v0_3": true,
+            "description": "Available"
+          },
+          {
+            "value": "Busy",
+            "in_master_v0_3": true,
+            "description": "Busy"
+          }
+        ]
+      }
+    },
+    "transitions": [
+      {
+        "transition_id": "TR-BED-01",
+        "entity_type": "bed",
+        "from": "available",
+        "to": "occupied",
+        "trigger": "Patient admitted to the bed",
+        "duration_minutes": null,
+        "side_effects": [
+          "occupied(department)+1"
+        ]
+      },
+      {
+        "transition_id": "TR-BED-02",
+        "entity_type": "bed",
+        "from": "occupied",
+        "to": "cleaning",
+        "trigger": "Patient discharged or transferred to another department",
+        "duration_minutes": null,
+        "side_effects": [
+          "occupied(department)-1"
+        ]
+      },
+      {
+        "transition_id": "TR-BED-03",
+        "entity_type": "bed",
+        "from": "cleaning",
+        "to": "available",
+        "trigger": "Turnover completed",
+        "duration_minutes": {
+          "ED-01": [
+            10,
+            20
+          ],
+          "ICU-01": [
+            20,
+            40
+          ],
+          "WARD-01": [
+            15,
+            30
+          ]
+        },
+        "side_effects": []
+      },
+      {
+        "transition_id": "TR-BED-04",
+        "entity_type": "bed",
+        "from": "available",
+        "to": "out_of_service",
+        "trigger": "Bed fault or shutdown",
+        "duration_minutes": null,
+        "side_effects": [
+          "capacity_effective(department)-1"
+        ]
+      },
+      {
+        "transition_id": "TR-BED-05",
+        "entity_type": "bed",
+        "from": "cleaning",
+        "to": "out_of_service",
+        "trigger": "Fault detected during turnover",
+        "duration_minutes": null,
+        "side_effects": [
+          "capacity_effective(department)-1"
+        ]
+      },
+      {
+        "transition_id": "TR-BED-06",
+        "entity_type": "bed",
+        "from": "out_of_service",
+        "to": "cleaning",
+        "trigger": "Repair completed (goes through turnover before becoming available)",
+        "duration_minutes": null,
+        "side_effects": [
+          "capacity_effective(department)+1"
+        ]
+      },
+      {
+        "transition_id": "TR-EQ-01",
+        "entity_type": "equipment",
+        "from": "available",
+        "to": "in_use",
+        "trigger": "Device starts being used for a patient",
+        "duration_minutes": null,
+        "side_effects": []
+      },
+      {
+        "transition_id": "TR-EQ-02",
+        "entity_type": "equipment",
+        "from": "in_use",
+        "to": "available",
+        "trigger": "Usage ended",
+        "duration_minutes": null,
+        "side_effects": []
+      },
+      {
+        "transition_id": "TR-EQ-03",
+        "entity_type": "equipment",
+        "from": "available",
+        "to": "maintenance",
+        "trigger": "Scheduled maintenance",
+        "duration_minutes": null,
+        "side_effects": [
+          "See availability_impact"
+        ]
+      },
+      {
+        "transition_id": "TR-EQ-04",
+        "entity_type": "equipment",
+        "from": "maintenance",
+        "to": "available",
+        "trigger": "Maintenance completed",
+        "duration_minutes": null,
+        "side_effects": []
+      },
+      {
+        "transition_id": "TR-EQ-05",
+        "entity_type": "equipment",
+        "from": "available",
+        "to": "out_of_service",
+        "trigger": "Fault",
+        "duration_minutes": null,
+        "side_effects": [
+          "See availability_impact"
+        ]
+      },
+      {
+        "transition_id": "TR-EQ-06",
+        "entity_type": "equipment",
+        "from": "in_use",
+        "to": "out_of_service",
+        "trigger": "Fault during use",
+        "duration_minutes": null,
+        "side_effects": [
+          "See availability_impact",
+          "Current patient returns to Waiting status"
+        ]
+      },
+      {
+        "transition_id": "TR-EQ-07",
+        "entity_type": "equipment",
+        "from": "out_of_service",
+        "to": "maintenance",
+        "trigger": "Repair started",
+        "duration_minutes": null,
+        "side_effects": []
+      },
+      {
+        "transition_id": "TR-STF-01",
+        "entity_type": "staff",
+        "from": "Available",
+        "to": "Busy",
+        "trigger": "Assigned to a patient case",
+        "duration_minutes": null,
+        "side_effects": []
+      },
+      {
+        "transition_id": "TR-STF-02",
+        "entity_type": "staff",
+        "from": "Busy",
+        "to": "Available",
+        "trigger": "Task completed",
+        "duration_minutes": null,
+        "side_effects": []
+      }
+    ],
+    "equipment_catalog": [
+      {
+        "equipment_id": "EQ-CT-01",
+        "department_id": "RAD-CT",
+        "equipment_type": "CT_SCANNER",
+        "units_in_department": 1,
+        "critical_for_department": true
+      },
+      {
+        "equipment_id": "EQ-DEF-01",
+        "department_id": "ED-01",
+        "equipment_type": "DEFIBRILLATOR",
+        "units_in_department": 2,
+        "critical_for_department": false
+      },
+      {
+        "equipment_id": "EQ-VENT-01",
+        "department_id": "ED-01",
+        "equipment_type": "VENTILATOR",
+        "units_in_department": 2,
+        "critical_for_department": false
+      },
+      {
+        "equipment_id": "EQ-ANLZ-01",
+        "department_id": "LAB-01",
+        "equipment_type": "LAB_ANALYZER",
+        "units_in_department": 1,
+        "critical_for_department": true
+      },
+      {
+        "equipment_id": "EQ-VENT-02",
+        "department_id": "ICU-01",
+        "equipment_type": "VENTILATOR",
+        "units_in_department": 1,
+        "critical_for_department": false
+      }
+    ],
+    "availability_impact": {
+      "parameters_are_assumptions": true,
+      "pressure_formula": {
+        "expression": "(occupied + predicted_incoming) / capacity_effective",
+        "thresholds": {
+          "Critical": ">= 0.9",
+          "Warning": ">= 0.7",
+          "Normal": "otherwise"
+        },
+        "zero_capacity_rule": "If capacity_effective = 0 the status is Critical",
+        "note": "Same department_status thresholds as in Abdullah's file; the only difference is replacing capacity with capacity_effective"
+      },
+      "capacity_effective_rules": [
+        {
+          "rule_id": "AV-CAP-01",
+          "applies_to": [
+            "ED-01",
+            "ICU-01",
+            "WARD-01"
+          ],
+          "expression": "Count of the department's beds records whose status is not out_of_service"
+        },
+        {
+          "rule_id": "AV-CAP-02",
+          "applies_to": [
+            "RAD-CT",
+            "LAB-01"
+          ],
+          "expression": "capacity * (operational devices in the department / total devices in the department)"
+        }
+      ],
+      "equipment_rules": [
+        {
+          "rule_id": "AV-EQ-01",
+          "equipment_id": "EQ-CT-01",
+          "when_status_in": [
+            "maintenance",
+            "out_of_service"
+          ],
+          "effects": {
+            "capacity_effective_department": 0,
+            "department_id": "RAD-CT",
+            "department_status": "Critical",
+            "blocked_path_step": "RAD-CT",
+            "affected_patient_ids_snapshot": [
+              "PAT-003",
+              "PAT-005",
+              "PAT-007",
+              "PAT-009",
+              "PAT-012",
+              "PAT-019",
+              "PAT-021",
+              "PAT-022",
+              "PAT-023",
+              "PAT-024"
+            ]
+          }
+        },
+        {
+          "rule_id": "AV-EQ-02",
+          "equipment_id": "EQ-ANLZ-01",
+          "when_status_in": [
+            "maintenance",
+            "out_of_service"
+          ],
+          "effects": {
+            "capacity_effective_department": 0,
+            "department_id": "LAB-01",
+            "department_status": "Critical",
+            "blocked_path_step": "LAB-01",
+            "affected_patient_ids_snapshot": [
+              "PAT-002",
+              "PAT-004",
+              "PAT-006",
+              "PAT-008",
+              "PAT-010",
+              "PAT-015",
+              "PAT-025",
+              "PAT-026",
+              "PAT-027",
+              "PAT-028",
+              "PAT-029",
+              "PAT-030"
+            ]
+          }
+        },
+        {
+          "rule_id": "AV-EQ-03",
+          "equipment_id": "EQ-DEF-01",
+          "when_status_in": [
+            "maintenance",
+            "out_of_service"
+          ],
+          "effects": {
+            "department_id": "ED-01",
+            "flag": "resuscitation_readiness_degraded",
+            "capacity_effective_department": null
+          }
+        },
+        {
+          "rule_id": "AV-EQ-04",
+          "equipment_id": "EQ-VENT-01",
+          "when_status_in": [
+            "maintenance",
+            "out_of_service"
+          ],
+          "effects": {
+            "department_id": "ED-01",
+            "flag": "ventilation_unavailable",
+            "capacity_effective_department": null
+          }
+        },
+        {
+          "rule_id": "AV-EQ-05",
+          "equipment_id": "EQ-VENT-02",
+          "when_status_in": [
+            "maintenance",
+            "out_of_service"
+          ],
+          "effects": {
+            "department_id": "ICU-01",
+            "flag": "ventilation_unavailable",
+            "capacity_effective_department": null
+          }
+        }
+      ],
+      "bed_rules": [
+        {
+          "rule_id": "AV-BED-01",
+          "when": "bed.status = out_of_service",
+          "effects": {
+            "capacity_effective_department": "-1 per bed"
+          }
+        }
+      ],
+      "snapshot": {
+        "timestamp": "2026-11-05T08:00:00Z",
+        "departments": [
+          {
+            "department_id": "ED-01",
+            "capacity_nominal": 40,
+            "capacity_effective": 40,
+            "basis": "beds",
+            "beds_available_now": 8,
+            "pressure_ratio_nominal": 0.9,
+            "pressure_ratio_effective": 0.9,
+            "department_status_effective": "Critical",
+            "department_status_master": "Critical"
+          },
+          {
+            "department_id": "RAD-CT",
+            "capacity_nominal": 15,
+            "capacity_effective": 15,
+            "basis": "equipment_ratio",
+            "beds_available_now": null,
+            "pressure_ratio_nominal": 1.2,
+            "pressure_ratio_effective": 1.2,
+            "department_status_effective": "Critical",
+            "department_status_master": "Critical"
+          },
+          {
+            "department_id": "LAB-01",
+            "capacity_nominal": 20,
+            "capacity_effective": 20,
+            "basis": "equipment_ratio",
+            "beds_available_now": null,
+            "pressure_ratio_nominal": 0.55,
+            "pressure_ratio_effective": 0.55,
+            "department_status_effective": "Normal",
+            "department_status_master": "Normal"
+          },
+          {
+            "department_id": "ICU-01",
+            "capacity_nominal": 8,
+            "capacity_effective": 8,
+            "basis": "beds",
+            "beds_available_now": 3,
+            "pressure_ratio_nominal": 0.875,
+            "pressure_ratio_effective": 0.875,
+            "department_status_effective": "Warning",
+            "department_status_master": "Warning"
+          },
+          {
+            "department_id": "WARD-01",
+            "capacity_nominal": 40,
+            "capacity_effective": 39,
+            "basis": "beds",
+            "beds_available_now": 24,
+            "pressure_ratio_nominal": 0.55,
+            "pressure_ratio_effective": 0.564,
+            "department_status_effective": "Normal",
+            "department_status_master": "Normal"
+          }
+        ]
+      }
+    }
+  },
+  "virtual_sensors": {
+    "reading_schema": {
+      "fields": [
+        {
+          "name": "sensor_id",
+          "type": "string",
+          "description": "Sensor identifier"
+        },
+        {
+          "name": "timestamp",
+          "type": "string (ISO 8601 UTC)",
+          "description": "Reading time"
+        },
+        {
+          "name": "value",
+          "type": "number|boolean",
+          "description": "Value within valid_range"
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "description": "Unit of measurement"
+        },
+        {
+          "name": "quality",
+          "type": "string",
+          "allowed": [
+            "good",
+            "stale",
+            "missing"
+          ],
+          "description": "stale if reading age exceeds max_staleness_seconds"
+        }
+      ]
+    },
+    "update_frequency_profiles": {
+      "fast_seconds": 10,
+      "normal_seconds": 30,
+      "slow_seconds": 60
+    },
+    "sensors": [
+      {
+        "sensor_id": "SNS-CT-01-USE",
+        "sensor_type": "equipment_in_use",
+        "entity_type": "equipment",
+        "entity_id": "EQ-CT-01",
+        "department_id": "RAD-CT",
+        "field": "in_use_signal",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "1 <- in_use, 0 <- available (unless the device is faulty or under maintenance)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-CT-01-HLTH",
+        "sensor_type": "equipment_health",
+        "entity_type": "equipment",
+        "entity_id": "EQ-CT-01",
+        "department_id": "RAD-CT",
+        "field": "health_ok",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 60,
+        "max_staleness_seconds": 180,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "0 <- out_of_service (triggers TR-EQ-05 or TR-EQ-06)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-DEF-01-USE",
+        "sensor_type": "equipment_in_use",
+        "entity_type": "equipment",
+        "entity_id": "EQ-DEF-01",
+        "department_id": "ED-01",
+        "field": "in_use_signal",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "1 <- in_use, 0 <- available (unless the device is faulty or under maintenance)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-DEF-01-HLTH",
+        "sensor_type": "equipment_health",
+        "entity_type": "equipment",
+        "entity_id": "EQ-DEF-01",
+        "department_id": "ED-01",
+        "field": "health_ok",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 60,
+        "max_staleness_seconds": 180,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "0 <- out_of_service (triggers TR-EQ-05 or TR-EQ-06)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-VENT-01-USE",
+        "sensor_type": "equipment_in_use",
+        "entity_type": "equipment",
+        "entity_id": "EQ-VENT-01",
+        "department_id": "ED-01",
+        "field": "in_use_signal",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "1 <- in_use, 0 <- available (unless the device is faulty or under maintenance)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-VENT-01-HLTH",
+        "sensor_type": "equipment_health",
+        "entity_type": "equipment",
+        "entity_id": "EQ-VENT-01",
+        "department_id": "ED-01",
+        "field": "health_ok",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 60,
+        "max_staleness_seconds": 180,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "0 <- out_of_service (triggers TR-EQ-05 or TR-EQ-06)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-ANLZ-01-USE",
+        "sensor_type": "equipment_in_use",
+        "entity_type": "equipment",
+        "entity_id": "EQ-ANLZ-01",
+        "department_id": "LAB-01",
+        "field": "in_use_signal",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "1 <- in_use, 0 <- available (unless the device is faulty or under maintenance)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-ANLZ-01-HLTH",
+        "sensor_type": "equipment_health",
+        "entity_type": "equipment",
+        "entity_id": "EQ-ANLZ-01",
+        "department_id": "LAB-01",
+        "field": "health_ok",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 60,
+        "max_staleness_seconds": 180,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "0 <- out_of_service (triggers TR-EQ-05 or TR-EQ-06)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-VENT-02-USE",
+        "sensor_type": "equipment_in_use",
+        "entity_type": "equipment",
+        "entity_id": "EQ-VENT-02",
+        "department_id": "ICU-01",
+        "field": "in_use_signal",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "1 <- in_use, 0 <- available (unless the device is faulty or under maintenance)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-VENT-02-HLTH",
+        "sensor_type": "equipment_health",
+        "entity_type": "equipment",
+        "entity_id": "EQ-VENT-02",
+        "department_id": "ICU-01",
+        "field": "health_ok",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 60,
+        "max_staleness_seconds": 180,
+        "maps_to": {
+          "collection": "equipment",
+          "id_field": "equipment_id",
+          "field": "status",
+          "rule": "0 <- out_of_service (triggers TR-EQ-05 or TR-EQ-06)"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": null
+      },
+      {
+        "sensor_id": "SNS-AMB-101-ETA",
+        "sensor_type": "ambulance_eta",
+        "entity_type": "ambulance",
+        "entity_id": "AMB-101",
+        "department_id": null,
+        "field": "eta_minutes",
+        "unit": "min",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          60
+        ],
+        "update_interval_seconds": 10,
+        "max_staleness_seconds": 30,
+        "maps_to": {
+          "collection": "ambulances",
+          "id_field": "ambulance_id",
+          "field": "eta_minutes"
+        },
+        "noise": {
+          "type": "gaussian",
+          "sigma": 0.5,
+          "unit": "min"
+        },
+        "notes": "When eta_minutes = 0 the patient status changes and current_department_id becomes next_department_id"
+      },
+      {
+        "sensor_id": "SNS-AMB-102-ETA",
+        "sensor_type": "ambulance_eta",
+        "entity_type": "ambulance",
+        "entity_id": "AMB-102",
+        "department_id": null,
+        "field": "eta_minutes",
+        "unit": "min",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          60
+        ],
+        "update_interval_seconds": 10,
+        "max_staleness_seconds": 30,
+        "maps_to": {
+          "collection": "ambulances",
+          "id_field": "ambulance_id",
+          "field": "eta_minutes"
+        },
+        "noise": {
+          "type": "gaussian",
+          "sigma": 0.5,
+          "unit": "min"
+        },
+        "notes": "When eta_minutes = 0 the patient status changes and current_department_id becomes next_department_id"
+      },
+      {
+        "sensor_id": "SNS-AMB-103-ETA",
+        "sensor_type": "ambulance_eta",
+        "entity_type": "ambulance",
+        "entity_id": "AMB-103",
+        "department_id": null,
+        "field": "eta_minutes",
+        "unit": "min",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          60
+        ],
+        "update_interval_seconds": 10,
+        "max_staleness_seconds": 30,
+        "maps_to": {
+          "collection": "ambulances",
+          "id_field": "ambulance_id",
+          "field": "eta_minutes"
+        },
+        "noise": {
+          "type": "gaussian",
+          "sigma": 0.5,
+          "unit": "min"
+        },
+        "notes": "When eta_minutes = 0 the patient status changes and current_department_id becomes next_department_id"
+      },
+      {
+        "sensor_id": "SNS-ED-01-OCC",
+        "sensor_type": "department_occupancy",
+        "entity_type": "department",
+        "entity_id": "ED-01",
+        "department_id": "ED-01",
+        "field": "occupied_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          40
+        ],
+        "update_interval_seconds": 30,
+        "max_staleness_seconds": 90,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "occupied"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Full occupancy reading, including background patients"
+      },
+      {
+        "sensor_id": "SNS-ED-01-QUE",
+        "sensor_type": "department_queue",
+        "entity_type": "department",
+        "entity_id": "ED-01",
+        "department_id": "ED-01",
+        "field": "queue_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          40
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "queue_length"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Derived from patients with Waiting status"
+      },
+      {
+        "sensor_id": "SNS-RAD-CT-OCC",
+        "sensor_type": "department_occupancy",
+        "entity_type": "department",
+        "entity_id": "RAD-CT",
+        "department_id": "RAD-CT",
+        "field": "occupied_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          15
+        ],
+        "update_interval_seconds": 30,
+        "max_staleness_seconds": 90,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "occupied"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Full occupancy reading, including background patients"
+      },
+      {
+        "sensor_id": "SNS-RAD-CT-QUE",
+        "sensor_type": "department_queue",
+        "entity_type": "department",
+        "entity_id": "RAD-CT",
+        "department_id": "RAD-CT",
+        "field": "queue_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          15
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "queue_length"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Derived from patients with Waiting status"
+      },
+      {
+        "sensor_id": "SNS-LAB-01-OCC",
+        "sensor_type": "department_occupancy",
+        "entity_type": "department",
+        "entity_id": "LAB-01",
+        "department_id": "LAB-01",
+        "field": "occupied_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          20
+        ],
+        "update_interval_seconds": 30,
+        "max_staleness_seconds": 90,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "occupied"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Full occupancy reading, including background patients"
+      },
+      {
+        "sensor_id": "SNS-LAB-01-QUE",
+        "sensor_type": "department_queue",
+        "entity_type": "department",
+        "entity_id": "LAB-01",
+        "department_id": "LAB-01",
+        "field": "queue_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          20
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "queue_length"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Derived from patients with Waiting status"
+      },
+      {
+        "sensor_id": "SNS-ICU-01-OCC",
+        "sensor_type": "department_occupancy",
+        "entity_type": "department",
+        "entity_id": "ICU-01",
+        "department_id": "ICU-01",
+        "field": "occupied_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          8
+        ],
+        "update_interval_seconds": 30,
+        "max_staleness_seconds": 90,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "occupied"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Full occupancy reading, including background patients"
+      },
+      {
+        "sensor_id": "SNS-ICU-01-QUE",
+        "sensor_type": "department_queue",
+        "entity_type": "department",
+        "entity_id": "ICU-01",
+        "department_id": "ICU-01",
+        "field": "queue_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          8
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "queue_length"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Derived from patients with Waiting status"
+      },
+      {
+        "sensor_id": "SNS-WARD-01-OCC",
+        "sensor_type": "department_occupancy",
+        "entity_type": "department",
+        "entity_id": "WARD-01",
+        "department_id": "WARD-01",
+        "field": "occupied_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          40
+        ],
+        "update_interval_seconds": 30,
+        "max_staleness_seconds": 90,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "occupied"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Full occupancy reading, including background patients"
+      },
+      {
+        "sensor_id": "SNS-WARD-01-QUE",
+        "sensor_type": "department_queue",
+        "entity_type": "department",
+        "entity_id": "WARD-01",
+        "department_id": "WARD-01",
+        "field": "queue_count",
+        "unit": "patients",
+        "data_type": "integer",
+        "valid_range": [
+          0,
+          40
+        ],
+        "update_interval_seconds": 15,
+        "max_staleness_seconds": 45,
+        "maps_to": {
+          "collection": "departments",
+          "id_field": "department_id",
+          "field": "queue_length"
+        },
+        "noise": {
+          "type": "none"
+        },
+        "notes": "Derived from patients with Waiting status"
+      }
+    ],
+    "sensor_templates": [
+      {
+        "template_id": "SNS-TPL-BED",
+        "sensor_type": "bed_occupancy",
+        "entity_type": "bed",
+        "sensor_id_pattern": "SNS-{bed_id}",
+        "applies_to": {
+          "collection": "beds",
+          "count": 88,
+          "by_department": {
+            "ED-01": 40,
+            "ICU-01": 8,
+            "WARD-01": 40
+          }
+        },
+        "field": "occupied_signal",
+        "unit": "boolean",
+        "data_type": "boolean",
+        "valid_range": [
+          0,
+          1
+        ],
+        "update_interval_seconds": 30,
+        "max_staleness_seconds": 90,
+        "maps_to": {
+          "collection": "beds",
+          "id_field": "bed_id",
+          "field": "status",
+          "rule": "1 <- occupied, 0 <- available or cleaning; out_of_service sends health signal only"
+        },
+        "noise": {
+          "type": "none"
+        }
+      }
+    ],
+    "initial_readings": [
+      {
+        "sensor_id": "SNS-CT-01-USE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-CT-01-HLTH",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-DEF-01-USE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 0,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-DEF-01-HLTH",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-VENT-01-USE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-VENT-01-HLTH",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-ANLZ-01-USE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 0,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-ANLZ-01-HLTH",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-VENT-02-USE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-VENT-02-HLTH",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 1,
+        "unit": "boolean",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-AMB-101-ETA",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 7,
+        "unit": "min",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-AMB-102-ETA",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 14,
+        "unit": "min",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-AMB-103-ETA",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 22,
+        "unit": "min",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-ED-01-OCC",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 32,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-ED-01-QUE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 11,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-RAD-CT-OCC",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 13,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-RAD-CT-QUE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 2,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-LAB-01-OCC",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 6,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-LAB-01-QUE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 4,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-ICU-01-OCC",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 5,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-ICU-01-QUE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 0,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-WARD-01-OCC",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 15,
+        "unit": "patients",
+        "quality": "good"
+      },
+      {
+        "sensor_id": "SNS-WARD-01-QUE",
+        "timestamp": "2026-11-05T08:00:00Z",
+        "value": 3,
+        "unit": "patients",
+        "quality": "good"
+      }
+    ]
+  },
+  "open_items": [
+    "Proposal for Abdullah: add bed_id to patients and patient_id to beds to track which patient occupies which bed",
+    "Approve the proposed states cleaning, maintenance and out_of_service for equipment",
+    "Decide who owns the capacity_effective calculation: the UI or calculateOperationalPressure"
+  ]
+}
